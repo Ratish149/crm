@@ -4,9 +4,10 @@ from rest_framework.response import Response
 
 from crm.utils import CustomPagination
 
-from .filters import LeadFilter
-from .models import Lead, Note
+from .filters import ActivityTimelineFilter, LeadFilter
+from .models import ActivityTimeline, Lead, Note
 from .serializers import (
+    ActivityTimelineSerializer,
     LeadDetailSerializer,
     LeadListSerializer,
     LeadPipelineSerializer,
@@ -23,7 +24,7 @@ class LeadListCreateView(generics.ListCreateAPIView):
     pagination_class = CustomPagination
     filter_backends = [DjangoFilterBackend, filters.SearchFilter]
     filterset_class = LeadFilter
-    search_fields = ["full_name", "email", "phone_number"]
+    search_fields = ["full_name", "phone_number"]
 
     def get_serializer_class(self):
         if self.request.method == "GET":
@@ -87,3 +88,16 @@ class LeadPipelineView(views.APIView):
             pipeline[status] = LeadPipelineSerializer(leads, many=True).data
 
         return Response(pipeline)
+
+
+class LeadActivityTimelineView(generics.ListAPIView):
+    serializer_class = ActivityTimelineSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend]
+    filterset_class = ActivityTimelineFilter
+
+    def get_queryset(self):
+        lead_id = self.kwargs.get("lead_id")
+        return ActivityTimeline.objects.filter(lead_id=lead_id).order_by("-created_at")
+
+

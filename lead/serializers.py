@@ -60,7 +60,6 @@ class SimpleActivitySerializer(serializers.ModelSerializer):
 
 class LeadSerializer(serializers.ModelSerializer):
     notes = NoteSerializer(many=True, read_only=True)
-    activities = ActivityTimelineSerializer(many=True, read_only=True)
     discovery_answers = LeadDiscoveryAnswerReadSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     tag_names = serializers.ListField(
@@ -105,7 +104,6 @@ class LeadSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "notes",
-            "activities",
             "discovery_answers",
             "tags",
             "tag_names",

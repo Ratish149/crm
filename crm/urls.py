@@ -23,4 +23,5 @@ urlpatterns = [
     path("api/", include("accounts.urls")),
     path("api/", include("lead.urls")),
     path("api/", include("discovery.urls")),
+    path("api/", include("knowledgebase.urls")),
 ]

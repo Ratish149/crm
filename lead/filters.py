@@ -1,6 +1,6 @@
 import django_filters
 
-from .models import Lead
+from .models import ActivityTimeline, Lead
 
 
 class LeadFilter(django_filters.FilterSet):
@@ -11,3 +11,9 @@ class LeadFilter(django_filters.FilterSet):
     class Meta:
         model = Lead
         fields = ["status", "source", "assigned_to", "rating"]
+
+
+class ActivityTimelineFilter(django_filters.FilterSet):
+    class Meta:
+        model = ActivityTimeline
+        fields = ["activity_type"]
