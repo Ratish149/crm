@@ -2,6 +2,9 @@ from django.urls import path
 
 from .views import (
     LeadActivityTimelineView,
+    LeadDocumentCreateView,
+    LeadDocumentListView,
+    LeadDocumentRetrieveUpdateDestroyView,
     LeadListCreateView,
     LeadPipelineView,
     LeadRetrieveUpdateDestroyView,
@@ -18,4 +21,15 @@ urlpatterns = [
     ),
     path("notes/", NoteCreateView.as_view(), name="note-create"),
     path("lead-pipeline/", LeadPipelineView.as_view(), name="lead-pipeline"),
+    path("documents/", LeadDocumentCreateView.as_view(), name="document-create"),
+    path(
+        "documents/<int:pk>/",
+        LeadDocumentRetrieveUpdateDestroyView.as_view(),
+        name="document-detail",
+    ),
+    path(
+        "lead/<int:lead_id>/documents/",
+        LeadDocumentListView.as_view(),
+        name="lead-documents",
+    ),
 ]

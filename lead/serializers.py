@@ -5,12 +5,7 @@ from discovery.serializers import (
     LeadDiscoveryAnswerReadSerializer,
 )
 
-from .models import (
-    ActivityTimeline,
-    Lead,
-    Note,
-    Tag,
-)
+from .models import ActivityTimeline, Lead, LeadDocument, Note, Tag
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -137,14 +132,33 @@ class LeadListSerializer(serializers.ModelSerializer):
         return None
 
 
+class LeadDocumentSerializer(serializers.ModelSerializer):
+    uploaded_by_detail = UserSerializer(source="uploaded_by", read_only=True)
+
+    class Meta:
+        model = LeadDocument
+        fields = [
+            "id",
+            "lead",
+            "file",
+            "uploaded_by",
+            "uploaded_by_detail",
+            "uploaded_at",
+            "updated_at",
+        ]
+        read_only_fields = ["uploaded_by", "uploaded_at", "updated_at"]
+
+
 class LeadDetailSerializer(LeadSerializer):
     assigned_to_detail = UserSerializer(source="assigned_to", read_only=True)
     created_by_detail = UserSerializer(source="created_by", read_only=True)
+    documents = LeadDocumentSerializer(many=True, read_only=True)
 
     class Meta(LeadSerializer.Meta):
         fields = LeadSerializer.Meta.fields + [
             "assigned_to_detail",
             "created_by_detail",
+            "documents",
         ]
 
 

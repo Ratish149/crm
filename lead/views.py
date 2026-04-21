@@ -5,10 +5,11 @@ from rest_framework.response import Response
 from crm.utils import CustomPagination
 
 from .filters import ActivityTimelineFilter, LeadFilter
-from .models import ActivityTimeline, Lead, Note
+from .models import ActivityTimeline, Lead, LeadDocument, Note
 from .serializers import (
     ActivityTimelineSerializer,
     LeadDetailSerializer,
+    LeadDocumentSerializer,
     LeadListSerializer,
     LeadPipelineSerializer,
     LeadSerializer,
@@ -101,3 +102,34 @@ class LeadActivityTimelineView(generics.ListAPIView):
         return ActivityTimeline.objects.filter(lead_id=lead_id).order_by("-created_at")
 
 
+class LeadDocumentCreateView(generics.CreateAPIView):
+    queryset = LeadDocument.objects.all()
+    serializer_class = LeadDocumentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def perform_create(self, serializer):
+        document = serializer.save(uploaded_by=self.request.user)
+        log_activity(
+            lead=document.lead,
+            activity_type="document_uploaded",
+            user=self.request.user,
+            description={
+                "message": f"A new document '{document.file.name}' was uploaded.",
+                "document_id": document.id,
+            },
+        )
+
+
+class LeadDocumentRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = LeadDocument.objects.all()
+    serializer_class = LeadDocumentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class LeadDocumentListView(generics.ListAPIView):
+    serializer_class = LeadDocumentSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        lead_id = self.kwargs.get("lead_id")
+        return LeadDocument.objects.filter(lead_id=lead_id).order_by("-uploaded_at")
