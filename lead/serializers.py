@@ -2,7 +2,7 @@ from rest_framework import serializers
 
 from accounts.serializers import UserSerializer
 from discovery.serializers import (
-    LeadDiscoveryAnswerReadSerializer,
+    LeadResponseReadSerializer,
 )
 
 from .models import ActivityTimeline, Lead, LeadDocument, Note, Tag
@@ -55,7 +55,7 @@ class SimpleActivitySerializer(serializers.ModelSerializer):
 
 class LeadSerializer(serializers.ModelSerializer):
     notes = NoteSerializer(many=True, read_only=True)
-    discovery_answers = LeadDiscoveryAnswerReadSerializer(many=True, read_only=True)
+    responses = LeadResponseReadSerializer(many=True, read_only=True)
     tags = TagSerializer(many=True, read_only=True)
     tag_names = serializers.ListField(
         child=serializers.CharField(), write_only=True, required=False
@@ -99,7 +99,7 @@ class LeadSerializer(serializers.ModelSerializer):
             "created_at",
             "updated_at",
             "notes",
-            "discovery_answers",
+            "responses",
             "tags",
             "tag_names",
             "rating",
