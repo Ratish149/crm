@@ -12,6 +12,7 @@ from .views import (
     LeadPipelineView,
     LeadRetrieveUpdateDestroyView,
     NoteCreateView,
+    TagListView,
 )
 
 urlpatterns = [
@@ -50,4 +51,5 @@ urlpatterns = [
         CheckUpcomingFollowupsView.as_view(),
         name="check-upcoming-followups",
     ),
+    path("tags/", TagListView.as_view(), name="tag-list"),
 ]

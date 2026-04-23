@@ -7,7 +7,7 @@ from rest_framework.response import Response
 from crm.utils import CustomPagination, send_resend_email
 
 from .filters import ActivityTimelineFilter, LeadFilter
-from .models import ActivityTimeline, Followup, Lead, LeadDocument, Note
+from .models import ActivityTimeline, Followup, Lead, LeadDocument, Note, Tag
 from .serializers import (
     ActivityTimelineSerializer,
     FollowupSerializer,
@@ -17,6 +17,7 @@ from .serializers import (
     LeadPipelineSerializer,
     LeadSerializer,
     NoteSerializer,
+    TagSerializer,
 )
 from .tasks import check_and_notify_upcoming_followups
 from .utils import log_activity
@@ -191,3 +192,11 @@ class CheckUpcomingFollowupsView(views.APIView):
         return Response({
             "message": f"Checked for upcoming followups. Notifications sent: {notifications_sent}"
         })
+
+
+class TagListView(generics.ListAPIView):
+    queryset = Tag.objects.all().order_by("name")
+    serializer_class = TagSerializer
+    filter_backends = [filters.SearchFilter]
+    search_fields = ["name"]
+
