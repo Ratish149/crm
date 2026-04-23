@@ -1,6 +1,9 @@
 from django.urls import path
 
 from .views import (
+    CheckUpcomingFollowupsView,
+    FollowupListCreateView,
+    FollowupRetrieveUpdateDestroyView,
     LeadActivityTimelineView,
     LeadDocumentCreateView,
     LeadDocumentListView,
@@ -31,5 +34,20 @@ urlpatterns = [
         "lead/<int:lead_id>/documents/",
         LeadDocumentListView.as_view(),
         name="lead-documents",
+    ),
+    path(
+        "lead/<int:lead_id>/followups/",
+        FollowupListCreateView.as_view(),
+        name="lead-followups",
+    ),
+    path(
+        "followups/<int:pk>/",
+        FollowupRetrieveUpdateDestroyView.as_view(),
+        name="followup-detail",
+    ),
+    path(
+        "check-followups/",
+        CheckUpcomingFollowupsView.as_view(),
+        name="check-upcoming-followups",
     ),
 ]

@@ -4,7 +4,7 @@ from discovery.serializers import (
 )
 from rest_framework import serializers
 
-from .models import ActivityTimeline, Lead, LeadDocument, Note, Tag
+from .models import ActivityTimeline, Followup, Lead, LeadDocument, Note, Tag
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -172,3 +172,23 @@ class LeadPipelineSerializer(serializers.ModelSerializer):
         if obj.assigned_to:
             return obj.assigned_to.get_full_name() or obj.assigned_to.username
         return None
+
+
+class FollowupSerializer(serializers.ModelSerializer):
+    created_by_detail = UserSerializer(source="created_by", read_only=True)
+
+    class Meta:
+        model = Followup
+        fields = [
+            "id",
+            "lead",
+            "followup_date",
+            "followup_time",
+            "notes",
+            "status",
+            "created_by",
+            "created_by_detail",
+            "created_at",
+            "updated_at",
+        ]
+        read_only_fields = ["created_by", "created_at", "updated_at"]

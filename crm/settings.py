@@ -14,6 +14,10 @@ import os
 from datetime import timedelta
 from pathlib import Path
 
+from dotenv import load_dotenv
+
+load_dotenv()
+
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
@@ -50,6 +54,7 @@ INSTALLED_APPS = [
     "knowledgebase",
     "tinymce",
     "invoice",
+    "django_apscheduler",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -134,7 +139,7 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = "en-us"
 
-TIME_ZONE = "UTC"
+TIME_ZONE = "Asia/Kathmandu"
 
 USE_I18N = True
 
@@ -205,3 +210,5 @@ TINYMCE_DEFAULT_CONFIG = {
     }""",
     "content_style": "body { font-family:Roboto,Helvetica,Arial,sans-serif; font-size:14px }",
 }
+
+RESEND_API_KEY = os.getenv("RESEND_API_KEY")

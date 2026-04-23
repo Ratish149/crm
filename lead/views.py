@@ -1,12 +1,16 @@
-from crm.utils import CustomPagination
+from datetime import timedelta
+
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, views
 from rest_framework.response import Response
 
+from crm.utils import CustomPagination, send_resend_email
+
 from .filters import ActivityTimelineFilter, LeadFilter
-from .models import ActivityTimeline, Lead, LeadDocument, Note
+from .models import ActivityTimeline, Followup, Lead, LeadDocument, Note
 from .serializers import (
     ActivityTimelineSerializer,
+    FollowupSerializer,
     LeadDetailSerializer,
     LeadDocumentSerializer,
     LeadListSerializer,
@@ -14,7 +18,7 @@ from .serializers import (
     LeadSerializer,
     NoteSerializer,
 )
-
+from .tasks import check_and_notify_upcoming_followups
 from .utils import log_activity
 
 
@@ -133,3 +137,57 @@ class LeadDocumentListView(generics.ListAPIView):
     def get_queryset(self):
         lead_id = self.kwargs.get("lead_id")
         return LeadDocument.objects.filter(lead_id=lead_id).order_by("-uploaded_at")
+
+
+class FollowupListCreateView(generics.ListCreateAPIView):
+    serializer_class = FollowupSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        lead_id = self.kwargs.get("lead_id")
+        return Followup.objects.filter(lead_id=lead_id).order_by(
+            "followup_date", "followup_time"
+        )
+
+    def perform_create(self, serializer):
+        followup = serializer.save(created_by=self.request.user)
+
+        from django.utils import timezone
+
+        today = timezone.localdate()
+        if followup.followup_date and followup.followup_date <= today + timedelta(
+            days=1
+        ):
+            self.send_followup_notification(followup)
+
+    def send_followup_notification(self, followup):
+        lead = followup.lead
+        assigned_user = lead.assigned_to
+
+        if assigned_user and assigned_user.email:
+            subject = f"Upcoming Follow-up: {lead.full_name}"
+            html_content = f"""
+                <h3>Follow-up Reminder</h3>
+                <p>You have an upcoming follow-up with <strong>{lead.full_name}</strong>.</p>
+                <p><strong>Date:</strong> {followup.followup_date}</p>
+                <p><strong>Time:</strong> {followup.followup_time or "Not specified"}</p>
+                <p><strong>Notes:</strong> {followup.notes or "No notes provided"}</p>
+                <p>View lead details: <a href="http://localhost:3000/leads/{lead.id}">Click here</a></p>
+            """
+            send_resend_email(assigned_user.email, subject, html_content)
+
+
+class FollowupRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Followup.objects.all()
+    serializer_class = FollowupSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+
+class CheckUpcomingFollowupsView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        notifications_sent = check_and_notify_upcoming_followups()
+        return Response({
+            "message": f"Checked for upcoming followups. Notifications sent: {notifications_sent}"
+        })

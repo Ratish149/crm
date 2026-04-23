@@ -1,0 +1,29 @@
+version: "3.9"
+
+services:
+  web:
+    build: .
+    command: gunicorn crm.wsgi:application --bind 0.0.0.0:8000
+    volumes:
+      - crm_media_data:/app/media   # Persist media uploads
+      - crm_static_data:/app/static # Persist static files
+    networks:
+      - coolify
+    restart: always
+
+  scheduler:
+    build: .
+    command: python manage.py run_scheduler
+    networks:
+      - coolify
+    restart: always
+    depends_on:
+      - web
+
+networks:
+  coolify:
+    external: true
+
+volumes:
+  crm_media_data:
+  crm_static_data:

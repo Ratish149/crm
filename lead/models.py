@@ -133,3 +133,45 @@ class ActivityTimeline(models.Model):
 
     def __str__(self):
         return f"{self.get_activity_type_display()} - {self.lead.full_name}"
+
+
+class Followup(models.Model):
+    STATUS_CHOICES = (
+        ("pending", _("Pending")),
+        ("completed", _("Completed")),
+        ("cancelled", _("Cancelled")),
+    )
+
+    lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name="followups")
+    followup_date = models.DateField(
+        help_text=_("Date scheduled for the follow-up"), blank=True, null=True
+    )
+    followup_time = models.TimeField(
+        help_text=_("Time scheduled for the follow-up"), blank=True, null=True
+    )
+
+    notes = models.TextField(
+        blank=True, help_text=_("Notes or agenda for the follow-up")
+    )
+    status = models.CharField(
+        max_length=20,
+        choices=STATUS_CHOICES,
+        default="pending",
+    )
+    created_by = models.ForeignKey(
+        "auth.User",
+        on_delete=models.SET_NULL,
+        null=True,
+        blank=True,
+        related_name="followups_created",
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["followup_date", "followup_time"]
+        verbose_name = _("Follow-up")
+        verbose_name_plural = _("Follow-ups")
+
+    def __str__(self):
+        return f"Follow-up for {self.lead.full_name} on {self.followup_date} at {self.followup_time}"
