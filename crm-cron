@@ -1,0 +1,2 @@
+0 9 * * * root /opt/venv/bin/python /app/manage.py notify_followups >> /var/log/cron.log 2>&1
+# Empty line required at the end of a cron file

@@ -54,7 +54,6 @@ INSTALLED_APPS = [
     "knowledgebase",
     "tinymce",
     "invoice",
-    "django_apscheduler",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
