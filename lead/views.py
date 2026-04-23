@@ -1,8 +1,7 @@
+from crm.utils import CustomPagination
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, views
 from rest_framework.response import Response
-
-from crm.utils import CustomPagination
 
 from .filters import ActivityTimelineFilter, LeadFilter
 from .models import ActivityTimeline, Lead, LeadDocument, Note
@@ -15,6 +14,7 @@ from .serializers import (
     LeadSerializer,
     NoteSerializer,
 )
+
 from .utils import log_activity
 
 
