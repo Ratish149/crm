@@ -24,4 +24,5 @@ urlpatterns = [
     path("api/", include("lead.urls")),
     path("api/", include("discovery.urls")),
     path("api/", include("knowledgebase.urls")),
+    path("api/", include("invoice.urls")),
 ]
