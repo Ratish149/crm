@@ -2,7 +2,8 @@ import json
 import os
 
 from django.shortcuts import get_object_or_404
-from dotenv import load_dotenv
+
+# from dotenv import load_dotenv
 from google import genai
 from rest_framework import generics, response, status, views
 
@@ -27,7 +28,7 @@ from .serializers import (
     SalesStageSerializer,
 )
 
-load_dotenv()
+# load_dotenv()
 
 
 # New google-genai SDK
