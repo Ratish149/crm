@@ -5,9 +5,11 @@ from .views import (
     FollowupListCreateView,
     FollowupRetrieveUpdateDestroyView,
     LeadActivityTimelineView,
+    LeadBulkImportView,
     LeadDocumentCreateView,
     LeadDocumentListView,
     LeadDocumentRetrieveUpdateDestroyView,
+    LeadImportTemplateView,
     LeadListCreateView,
     LeadPipelineView,
     LeadRetrieveUpdateDestroyView,
@@ -52,4 +54,10 @@ urlpatterns = [
         name="check-upcoming-followups",
     ),
     path("tags/", TagListView.as_view(), name="tag-list"),
+    path(
+        "lead/import-template/",
+        LeadImportTemplateView.as_view(),
+        name="lead-import-template",
+    ),
+    path("lead/bulk-import/", LeadBulkImportView.as_view(), name="lead-bulk-import"),
 ]

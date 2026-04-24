@@ -1,7 +1,11 @@
+import csv
+import io
 from datetime import timedelta
 
+from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
-from rest_framework import filters, generics, permissions, views
+from rest_framework import filters, generics, permissions, status, views
+from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from crm.utils import CustomPagination, send_resend_email
@@ -89,9 +93,9 @@ class LeadPipelineView(views.APIView):
             queryset = filterset.qs
 
         pipeline = {}
-        for status, label in Lead.STATUS_CHOICES:
-            leads = queryset.filter(status=status)
-            pipeline[status] = LeadPipelineSerializer(leads, many=True).data
+        for s_code, label in Lead.STATUS_CHOICES:
+            leads = queryset.filter(status=s_code)
+            pipeline[s_code] = LeadPipelineSerializer(leads, many=True).data
 
         return Response(pipeline)
 
@@ -200,3 +204,129 @@ class TagListView(generics.ListAPIView):
     filter_backends = [filters.SearchFilter]
     search_fields = ["name"]
 
+
+class LeadImportTemplateView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        response = HttpResponse(content_type="text/csv")
+        response["Content-Disposition"] = (
+            'attachment; filename="lead_import_template.csv"'
+        )
+
+        writer = csv.writer(response)
+        writer.writerow([
+            "full_name",
+            "email",
+            "phone_number",
+            "source",
+            "estimate_value",
+        ])
+        # Add a sample row
+        writer.writerow([
+            "John Doe",
+            "john@example.com",
+            "9876543210",
+            "Facebook",
+            "1000",
+        ])
+
+        return response
+
+
+class LeadBulkImportView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+    parser_classes = [MultiPartParser]
+
+    def post(self, request, *args, **kwargs):
+        file = request.FILES.get("file")
+        if not file:
+            return Response(
+                {"error": "No file uploaded"}, status=status.HTTP_400_BAD_REQUEST
+            )
+
+        if not file.name.endswith(".csv"):
+            return Response(
+                {"error": "Only CSV files are supported"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            decoded_file = file.read().decode("utf-8")
+            io_string = io.StringIO(decoded_file)
+            reader = csv.DictReader(io_string)
+        except Exception as e:
+            return Response(
+                {"error": f"Failed to parse CSV: {str(e)}"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        success_count = 0
+        errors = []
+
+        for row_idx, row in enumerate(reader, start=2):
+            # Clean row keys (strip whitespace)
+            clean_row = {k.strip(): v.strip() if v else v for k, v in row.items()}
+
+            # Basic validation
+            if not clean_row.get("full_name") or not clean_row.get("phone_number"):
+                errors.append({
+                    "row": row_idx,
+                    "error": "full_name and phone_number are required",
+                })
+                continue
+
+            # Check if lead already exists
+            if Lead.objects.filter(full_name=clean_row["full_name"]).exists():
+                errors.append({
+                    "row": row_idx,
+                    "error": f"Lead with name '{clean_row['full_name']}' already exists",
+                })
+                continue
+
+            if (
+                clean_row.get("email")
+                and Lead.objects.filter(email=clean_row["email"]).exists()
+            ):
+                errors.append({
+                    "row": row_idx,
+                    "error": f"Lead with email '{clean_row['email']}' already exists",
+                })
+                continue
+
+            if Lead.objects.filter(phone_number=clean_row["phone_number"]).exists():
+                errors.append({
+                    "row": row_idx,
+                    "error": f"Lead with phone number '{clean_row['phone_number']}' already exists",
+                })
+                continue
+
+            # Force status to 'new' for all imported leads
+            clean_row["status"] = "new"
+
+            # Ensure rating is not overwritten if accidentally included
+            clean_row.pop("rating", None)
+
+            serializer = LeadSerializer(data=clean_row)
+            if serializer.is_valid():
+                lead = serializer.save(created_by=request.user)
+                log_activity(
+                    lead=lead,
+                    activity_type="lead_created",
+                    user=request.user,
+                    description={"message": f"Lead '{lead.full_name}' was imported."},
+                )
+                success_count += 1
+            else:
+                errors.append({"row": row_idx, "error": serializer.errors})
+
+        return Response(
+            {
+                "message": f"Import completed. {success_count} leads created.",
+                "success_count": success_count,
+                "errors": errors,
+            },
+            status=status.HTTP_201_CREATED
+            if success_count > 0
+            else status.HTTP_400_BAD_REQUEST,
+        )
