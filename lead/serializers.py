@@ -1,8 +1,9 @@
+from rest_framework import serializers
+
 from accounts.serializers import UserSerializer
 from discovery.serializers import (
     LeadResponseReadSerializer,
 )
-from rest_framework import serializers
 
 from .models import ActivityTimeline, Followup, Lead, LeadDocument, Note, Tag
 

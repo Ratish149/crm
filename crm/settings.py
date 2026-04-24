@@ -64,6 +64,8 @@ CORS_ALLOWED_ORIGINS = [
     "http://192.168.1.75:3000",
     "http://localhost:8000",
     "https://v4w88w4cg4ws0oo440goksco.nepdora.com",
+    "https://crmapi.baliyotech.com",
+    "https://crm.baliyotech.com",
 ]
 
 CSRF_TRUSTED_ORIGINS = [
@@ -71,6 +73,8 @@ CSRF_TRUSTED_ORIGINS = [
     "http://192.168.1.75:3000",
     "http://localhost:8000",
     "https://v4w88w4cg4ws0oo440goksco.nepdora.com",
+    "https://crmapi.baliyotech.com",
+    "https://crm.baliyotech.com",
 ]
 
 MIDDLEWARE = [
