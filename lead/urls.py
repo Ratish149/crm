@@ -1,6 +1,7 @@
 from django.urls import path
 
 from .views import (
+    AllFollowupListView,
     CheckUpcomingFollowupsView,
     FollowupListCreateView,
     FollowupRetrieveUpdateDestroyView,
@@ -19,6 +20,7 @@ from .views import (
 )
 
 urlpatterns = [
+    path("followups/", AllFollowupListView.as_view(), name="followup-list"),
     path("lead/", LeadListCreateView.as_view(), name="lead-list-create"),
     path("lead/send-email/", SendLeadEmailView.as_view(), name="lead-send-email"),
     path("lead/<int:pk>/", LeadRetrieveUpdateDestroyView.as_view(), name="lead-detail"),

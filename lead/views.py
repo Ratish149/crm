@@ -10,10 +10,11 @@ from rest_framework.response import Response
 
 from crm.utils import CustomPagination, send_resend_email
 
-from .filters import ActivityTimelineFilter, LeadFilter
+from .filters import ActivityTimelineFilter, FollowupFilter, LeadFilter
 from .models import ActivityTimeline, Followup, Lead, LeadDocument, Note, Tag
 from .serializers import (
     ActivityTimelineSerializer,
+    FollowupListReadSerializer,
     FollowupSerializer,
     LeadDetailSerializer,
     LeadDocumentSerializer,
@@ -186,6 +187,42 @@ class FollowupRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Followup.objects.all()
     serializer_class = FollowupSerializer
     permission_classes = [permissions.IsAuthenticated]
+
+
+class AllFollowupListView(generics.ListAPIView):
+    queryset = Followup.objects.all()
+    serializer_class = FollowupListReadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = FollowupFilter
+    search_fields = ["lead__full_name", "notes"]
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+        params = self.request.query_params
+
+        # If no specific date filters are provided, default to current week
+        date_filters = ["month", "day", "year", "start_date", "end_date"]
+        if not any(param in params for param in date_filters):
+            from datetime import timedelta
+
+            from django.utils import timezone
+
+            today = timezone.localdate()
+            start_of_week = today - timedelta(days=today.weekday())
+            end_of_week = start_of_week + timedelta(days=6)
+
+            queryset = queryset.filter(
+                followup_date__range=[start_of_week, end_of_week]
+            )
+
+        # If month or day is provided but year is not, default to current year
+        elif ("month" in params or "day" in params) and "year" not in params:
+            from django.utils import timezone
+
+            queryset = queryset.filter(followup_date__year=timezone.localdate().year)
+
+        return queryset.order_by("followup_date", "followup_time")
 
 
 class CheckUpcomingFollowupsView(views.APIView):
@@ -379,6 +416,8 @@ class SendLeadEmailView(views.APIView):
             )
         else:
             return Response(
-                {"error": "Failed to send email. Please check your email configuration."},
+                {
+                    "error": "Failed to send email. Please check your email configuration."
+                },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )

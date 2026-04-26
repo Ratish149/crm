@@ -193,3 +193,10 @@ class FollowupSerializer(serializers.ModelSerializer):
             "updated_at",
         ]
         read_only_fields = ["created_by", "created_at", "updated_at"]
+
+
+class FollowupListReadSerializer(FollowupSerializer):
+    lead_name = serializers.CharField(source="lead.full_name", read_only=True)
+
+    class Meta(FollowupSerializer.Meta):
+        fields = FollowupSerializer.Meta.fields + ["lead_name"]

@@ -1,6 +1,6 @@
 import django_filters
 
-from .models import ActivityTimeline, Lead
+from .models import ActivityTimeline, Followup, Lead
 
 
 class LeadFilter(django_filters.FilterSet):
@@ -24,3 +24,15 @@ class ActivityTimelineFilter(django_filters.FilterSet):
     class Meta:
         model = ActivityTimeline
         fields = ["activity_type"]
+
+
+class FollowupFilter(django_filters.FilterSet):
+    month = django_filters.NumberFilter(field_name="followup_date", lookup_expr="month")
+    year = django_filters.NumberFilter(field_name="followup_date", lookup_expr="year")
+    day = django_filters.NumberFilter(field_name="followup_date", lookup_expr="day")
+    start_date = django_filters.DateFilter(field_name="followup_date", lookup_expr="gte")
+    end_date = django_filters.DateFilter(field_name="followup_date", lookup_expr="lte")
+
+    class Meta:
+        model = Followup
+        fields = ["status", "lead"]
