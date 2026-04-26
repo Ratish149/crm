@@ -17,7 +17,7 @@ def send_resend_email(to_email, subject, html_content):
         return None
 
     params = {
-        "from": "Baliyo CRM <onboarding@resend.dev>",
+        "from": "Nepdora CRM <nepdoraCrm@baliyoventures.com>",
         "to": [to_email],
         "subject": subject,
         "html": html_content,
