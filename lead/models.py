@@ -117,6 +117,7 @@ class ActivityTimeline(models.Model):
         ("note_added", _("Note Added")),
         ("discovery_updated", _("Discovery Updated")),
         ("document_uploaded", _("Document Uploaded")),
+        ("email_sent", _("Email Sent")),
     )
     lead = models.ForeignKey(Lead, on_delete=models.CASCADE, related_name="activities")
     user = models.ForeignKey(
