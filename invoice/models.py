@@ -16,12 +16,14 @@ class Invoice(models.Model):
     bill_from_address = models.TextField(null=True, blank=True)
     bill_from_email = models.EmailField(null=True, blank=True)
     bill_from_phone = models.CharField(max_length=20, null=True, blank=True)
+    bill_from_vat = models.CharField(max_length=20, null=True, blank=True)
 
     # Bill To Information
     bill_to_name = models.CharField(max_length=255)
     bill_to_address = models.TextField(null=True, blank=True)
     bill_to_email = models.EmailField(null=True, blank=True)
     bill_to_phone = models.CharField(max_length=20, null=True, blank=True)
+    bill_to_vat = models.CharField(max_length=20, null=True, blank=True)
 
     # Invoice Details
     invoice_number = models.CharField(
