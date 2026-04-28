@@ -176,3 +176,20 @@ class Followup(models.Model):
 
     def __str__(self):
         return f"Follow-up for {self.lead.full_name} on {self.followup_date} at {self.followup_time}"
+
+
+class FilterPreset(models.Model):
+    name = models.CharField(max_length=255)
+    filters = models.JSONField(
+        default=dict, help_text=_("JSON representation of filter parameters")
+    )
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ["-created_at"]
+        verbose_name = _("Filter Preset")
+        verbose_name_plural = _("Filter Presets")
+
+    def __str__(self):
+        return f"{self.name} - {self.user.username}"

@@ -11,9 +11,18 @@ from rest_framework.response import Response
 from crm.utils import CustomPagination, send_resend_email
 
 from .filters import ActivityTimelineFilter, FollowupFilter, LeadFilter
-from .models import ActivityTimeline, Followup, Lead, LeadDocument, Note, Tag
+from .models import (
+    ActivityTimeline,
+    FilterPreset,
+    Followup,
+    Lead,
+    LeadDocument,
+    Note,
+    Tag,
+)
 from .serializers import (
     ActivityTimelineSerializer,
+    FilterPresetSerializer,
     FollowupListReadSerializer,
     FollowupSerializer,
     LeadDetailSerializer,
@@ -421,3 +430,19 @@ class SendLeadEmailView(views.APIView):
                 },
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR,
             )
+
+
+class FilterPresetListCreateView(generics.ListCreateAPIView):
+    serializer_class = FilterPresetSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return FilterPreset.objects.all()
+
+
+class FilterPresetRetrieveUpdateDestroyView(generics.RetrieveUpdateDestroyAPIView):
+    serializer_class = FilterPresetSerializer
+    permission_classes = [permissions.IsAuthenticated]
+
+    def get_queryset(self):
+        return FilterPreset.objects.all()

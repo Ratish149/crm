@@ -5,7 +5,15 @@ from discovery.serializers import (
     LeadResponseReadSerializer,
 )
 
-from .models import ActivityTimeline, Followup, Lead, LeadDocument, Note, Tag
+from .models import (
+    ActivityTimeline,
+    FilterPreset,
+    Followup,
+    Lead,
+    LeadDocument,
+    Note,
+    Tag,
+)
 
 
 class TagSerializer(serializers.ModelSerializer):
@@ -200,3 +208,10 @@ class FollowupListReadSerializer(FollowupSerializer):
 
     class Meta(FollowupSerializer.Meta):
         fields = FollowupSerializer.Meta.fields + ["lead_name"]
+
+
+class FilterPresetSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = FilterPreset
+        fields = ["id", "name", "filters", "created_at", "updated_at"]
+        read_only_fields = ["created_at", "updated_at"]

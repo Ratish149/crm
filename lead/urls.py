@@ -3,6 +3,8 @@ from django.urls import path
 from .views import (
     AllFollowupListView,
     CheckUpcomingFollowupsView,
+    FilterPresetListCreateView,
+    FilterPresetRetrieveUpdateDestroyView,
     FollowupListCreateView,
     FollowupRetrieveUpdateDestroyView,
     LeadActivityTimelineView,
@@ -64,4 +66,14 @@ urlpatterns = [
         name="lead-import-template",
     ),
     path("lead/bulk-import/", LeadBulkImportView.as_view(), name="lead-bulk-import"),
+    path(
+        "filter-presets/",
+        FilterPresetListCreateView.as_view(),
+        name="filter-preset-list",
+    ),
+    path(
+        "filter-presets/<int:pk>/",
+        FilterPresetRetrieveUpdateDestroyView.as_view(),
+        name="filter-preset-detail",
+    ),
 ]
