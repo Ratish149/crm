@@ -8,6 +8,7 @@ class Invoice(models.Model):
         ("Draft", "Draft"),
         ("Pending", "Pending"),
         ("Paid", "Paid"),
+        ("Received", "Received"),
         ("Overdue", "Overdue"),
     ]
     status = models.CharField(max_length=10, choices=STATUS, null=True, blank=True)

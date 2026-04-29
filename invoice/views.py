@@ -216,6 +216,15 @@ class InvoiceStatisticsView(generics.GenericAPIView):
                     or 0
                 ),
             },
+            "received": {
+                "count": base_queryset.filter(status="Received").count(),
+                "amount": float(
+                    base_queryset.filter(status="Received").aggregate(
+                        Sum("total_amount")
+                    )["total_amount__sum"]
+                    or 0
+                ),
+            },
             "pending": {
                 "count": base_queryset.filter(status="Pending").count(),
                 "amount": float(
