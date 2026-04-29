@@ -234,6 +234,17 @@ class AllFollowupListView(generics.ListAPIView):
         return queryset.order_by("followup_date", "followup_time")
 
 
+class IncompleteFollowupListView(generics.ListAPIView):
+    queryset = Followup.objects.exclude(status="completed").order_by(
+        "followup_date", "followup_time"
+    )
+    serializer_class = FollowupListReadSerializer
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = FollowupFilter
+    search_fields = ["lead__full_name", "notes"]
+
+
 class CheckUpcomingFollowupsView(views.APIView):
     permission_classes = [permissions.IsAuthenticated]
 

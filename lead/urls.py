@@ -7,6 +7,7 @@ from .views import (
     FilterPresetRetrieveUpdateDestroyView,
     FollowupListCreateView,
     FollowupRetrieveUpdateDestroyView,
+    IncompleteFollowupListView,
     LeadActivityTimelineView,
     LeadBulkImportView,
     LeadDocumentCreateView,
@@ -23,6 +24,11 @@ from .views import (
 
 urlpatterns = [
     path("followups/", AllFollowupListView.as_view(), name="followup-list"),
+    path(
+        "followups/incomplete/",
+        IncompleteFollowupListView.as_view(),
+        name="incomplete-followup-list",
+    ),
     path("lead/", LeadListCreateView.as_view(), name="lead-list-create"),
     path("lead/send-email/", SendLeadEmailView.as_view(), name="lead-send-email"),
     path("lead/<int:pk>/", LeadRetrieveUpdateDestroyView.as_view(), name="lead-detail"),
