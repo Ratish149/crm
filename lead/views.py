@@ -91,11 +91,14 @@ class NoteCreateView(generics.CreateAPIView):
         )
 
 
-class LeadPipelineView(views.APIView):
+class LeadPipelineView(generics.GenericAPIView):
     # permission_classes = [permissions.IsAuthenticated]
+    pagination_class = CustomPagination
 
     def get(self, request, *args, **kwargs):
-        queryset = Lead.objects.all().select_related("assigned_to")
+        queryset = (
+            Lead.objects.all().select_related("assigned_to").order_by("-created_at")
+        )
 
         # Apply filters
         filterset = LeadFilter(request.GET, queryset=queryset)
@@ -105,7 +108,21 @@ class LeadPipelineView(views.APIView):
         pipeline = {}
         for s_code, label in Lead.STATUS_CHOICES:
             leads = queryset.filter(status=s_code)
-            pipeline[s_code] = LeadPipelineSerializer(leads, many=True).data
+
+            # Instantiate the pagination class defined on the view
+            paginator = self.pagination_class()
+
+            # Give each column its own pagination parameter (e.g., ?page_new=2, ?page_contacted=3)
+            paginator.page_query_param = f"page_{s_code}"
+
+            paginated_leads = paginator.paginate_queryset(leads, request, view=self)
+
+            pipeline[s_code] = {
+                "count": paginator.page.paginator.count,
+                "next": paginator.get_next_link(),
+                "previous": paginator.get_previous_link(),
+                "results": LeadPipelineSerializer(paginated_leads, many=True).data,
+            }
 
         return Response(pipeline)
 
