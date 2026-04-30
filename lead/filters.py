@@ -1,4 +1,5 @@
 import django_filters
+from django.db import models
 
 from .models import ActivityTimeline, Followup, Lead
 
@@ -6,6 +7,23 @@ from .models import ActivityTimeline, Followup, Lead
 class LeadFilter(django_filters.FilterSet):
     tag = django_filters.CharFilter(method="filter_by_tags")
     preset = django_filters.NumberFilter(method="filter_by_preset")
+    activity_type = django_filters.ChoiceFilter(
+        choices=ActivityTimeline.ACTIVITY_TYPES, method="filter_by_recent_activity"
+    )
+
+    def filter_by_recent_activity(self, queryset, name, value):
+        if not value:
+            return queryset
+        # Use a subquery to find the latest activity for each lead
+        latest_activity = ActivityTimeline.objects.filter(
+            lead=models.OuterRef("pk")
+        ).order_by("-created_at")
+
+        return queryset.annotate(
+            latest_activity_type=models.Subquery(
+                latest_activity.values("activity_type")[:1]
+            )
+        ).filter(latest_activity_type=value)
 
     def filter_by_preset(self, queryset, name, value):
         if not value:
