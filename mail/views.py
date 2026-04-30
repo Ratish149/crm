@@ -1,0 +1,151 @@
+import os
+
+from django.conf import settings
+from django.template.loader import render_to_string
+from django.utils import timezone
+from rest_framework import permissions, status, views
+from rest_framework.response import Response
+
+from crm.utils import send_resend_email
+from lead.models import Lead
+from lead.utils import log_activity
+
+
+class SendLeadEmailView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        lead_id = request.data.get("lead_id")
+        subject = request.data.get("subject")
+        body = request.data.get("body")
+
+        if not all([lead_id, subject, body]):
+            return Response(
+                {"error": "lead_id, subject, and body are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        try:
+            lead = Lead.objects.get(id=lead_id)
+        except Lead.DoesNotExist:
+            return Response(
+                {"error": "Lead not found"}, status=status.HTTP_404_NOT_FOUND
+            )
+
+        if not lead.email:
+            return Response(
+                {"error": "Lead does not have an email address"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Send the email using the utility function
+        email_sent = send_resend_email(lead.email, subject, body)
+
+        if email_sent:
+            # Log activity in the timeline
+            log_activity(
+                lead=lead,
+                activity_type="email_sent",
+                user=request.user,
+                description={
+                    "message": f"Email sent to {lead.email}",
+                    "subject": subject,
+                    "body": body,
+                },
+            )
+            return Response(
+                {"message": "Email sent successfully"}, status=status.HTTP_200_OK
+            )
+        else:
+            return Response(
+                {
+                    "error": "Failed to send email. Please check your email configuration."
+                },
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+
+class SendExclusiveOfferEmailView(views.APIView):
+    permission_classes = [permissions.IsAuthenticated]
+
+    def post(self, request, *args, **kwargs):
+        name = request.data.get("name")
+        email_address = request.data.get("email")
+        website = request.data.get("website", "your website")
+        date = request.data.get("date", "")
+        paid_until = request.data.get("paid_until", "your trial ends")
+        company_name = request.data.get("company_name", "")
+
+        if not name or not email_address:
+            return Response(
+                {"error": "name and email are required"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        # Try to find a lead to log activity
+        lead = Lead.objects.filter(email=email_address).first()
+        if not lead and company_name:
+            lead = Lead.objects.filter(full_name__icontains=company_name).first()
+
+        if not company_name:
+            company_name = lead.full_name if lead else name
+
+        if not date:
+            if lead:
+                date = lead.created_at.strftime("%B %d, %Y")
+            else:
+                date = timezone.now().strftime("%B %d, %Y")
+
+        subject = f"Exclusive offer to get {company_name} online with Nepdora!"
+
+        # Render HTML content from template
+        context = {
+            "name": name,
+            "website": website,
+            "date": date,
+            "paid_until": paid_until,
+            "company_name": company_name,
+        }
+        html_content = render_to_string("mail/exclusive_offer.html", context)
+
+        # Prepare attachment
+        attachments = []
+        pdf_path = os.path.join(
+            settings.BASE_DIR,
+            "static",
+            "mail_template",
+            "Website Development Proposal Nepdora.pdf",
+        )
+
+        if os.path.exists(pdf_path):
+            with open(pdf_path, "rb") as f:
+                content = list(f.read())
+                attachments.append({
+                    "filename": "Website Development Proposal Nepdora.pdf",
+                    "content": content,
+                })
+
+        email_sent = send_resend_email(
+            email_address, subject, html_content, attachments=attachments
+        )
+
+        if email_sent:
+            if lead:
+                log_activity(
+                    lead=lead,
+                    activity_type="email_sent",
+                    user=request.user,
+                    description={
+                        "message": f"Exclusive offer email sent to {email_address}",
+                        "subject": subject,
+                    },
+                )
+            return Response(
+                {"message": "Exclusive offer email sent successfully"},
+                status=status.HTTP_200_OK,
+            )
+        else:
+            return Response(
+                {"error": "Failed to send email"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )

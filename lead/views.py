@@ -406,60 +406,6 @@ class LeadBulkImportView(views.APIView):
         )
 
 
-class SendLeadEmailView(views.APIView):
-    permission_classes = [permissions.IsAuthenticated]
-
-    def post(self, request, *args, **kwargs):
-        lead_id = request.data.get("lead_id")
-        subject = request.data.get("subject")
-        body = request.data.get("body")
-
-        if not all([lead_id, subject, body]):
-            return Response(
-                {"error": "lead_id, subject, and body are required"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        try:
-            lead = Lead.objects.get(id=lead_id)
-        except Lead.DoesNotExist:
-            return Response(
-                {"error": "Lead not found"}, status=status.HTTP_404_NOT_FOUND
-            )
-
-        if not lead.email:
-            return Response(
-                {"error": "Lead does not have an email address"},
-                status=status.HTTP_400_BAD_REQUEST,
-            )
-
-        # Send the email using the utility function
-        email_sent = send_resend_email(lead.email, subject, body)
-
-        if email_sent:
-            # Log activity in the timeline
-            log_activity(
-                lead=lead,
-                activity_type="email_sent",
-                user=request.user,
-                description={
-                    "message": f"Email sent to {lead.email}",
-                    "subject": subject,
-                    "body": body,
-                },
-            )
-            return Response(
-                {"message": "Email sent successfully"}, status=status.HTTP_200_OK
-            )
-        else:
-            return Response(
-                {
-                    "error": "Failed to send email. Please check your email configuration."
-                },
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
-            )
-
-
 class FilterPresetListCreateView(generics.ListCreateAPIView):
     serializer_class = FilterPresetSerializer
     permission_classes = [permissions.IsAuthenticated]

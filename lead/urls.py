@@ -18,7 +18,6 @@ from .views import (
     LeadPipelineView,
     LeadRetrieveUpdateDestroyView,
     NoteCreateView,
-    SendLeadEmailView,
     TagListView,
 )
 
@@ -30,7 +29,6 @@ urlpatterns = [
         name="incomplete-followup-list",
     ),
     path("lead/", LeadListCreateView.as_view(), name="lead-list-create"),
-    path("lead/send-email/", SendLeadEmailView.as_view(), name="lead-send-email"),
     path("lead/<int:pk>/", LeadRetrieveUpdateDestroyView.as_view(), name="lead-detail"),
     path(
         "lead/<int:lead_id>/activities/",

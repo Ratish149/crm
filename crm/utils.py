@@ -11,17 +11,20 @@ class CustomPagination(PageNumberPagination):
     max_page_size = 100
 
 
-def send_resend_email(to_email, subject, html_content):
+def send_resend_email(to_email, subject, html_content, attachments=None):
     if not resend.api_key:
         print("Resend API key not configured.")
         return None
 
     params = {
-        "from": "Nepdora CRM <nepdoraCrm@baliyoventures.com>",
+        "from": "Nepdora CRM <NepdoraCrm@baliyoventures.com>",
         "to": [to_email],
         "subject": subject,
         "html": html_content,
     }
+
+    if attachments:
+        params["attachments"] = attachments
 
     try:
         email = resend.Emails.send(params)

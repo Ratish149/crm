@@ -56,6 +56,7 @@ INSTALLED_APPS = [
     "knowledgebase",
     "tinymce",
     "invoice",
+    "mail",
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
