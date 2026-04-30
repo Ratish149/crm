@@ -1,6 +1,10 @@
 from django.urls import path
 
-from .views import SendExclusiveOfferEmailView, SendLeadEmailView
+from .views import (
+    SendBusinessRecommendationEmailView,
+    SendExclusiveOfferEmailView,
+    SendLeadEmailView,
+)
 
 urlpatterns = [
     path("lead/send-email/", SendLeadEmailView.as_view(), name="lead-send-email"),
@@ -8,5 +12,10 @@ urlpatterns = [
         "lead/send-proposal/",
         SendExclusiveOfferEmailView.as_view(),
         name="lead-send-proposal",
+    ),
+    path(
+        "lead/send-recommendation/",
+        SendBusinessRecommendationEmailView.as_view(),
+        name="lead-send-recommendation",
     ),
 ]
