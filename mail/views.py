@@ -110,12 +110,19 @@ class SendExclusiveOfferEmailView(views.APIView):
 
         # Prepare attachment
         attachments = []
+        # Look in collected static first (production), then in assets (source/development)
         pdf_path = os.path.join(
-            settings.BASE_DIR,
-            "static",
+            settings.STATIC_ROOT,
             "mail_template",
             "Website Development Proposal Nepdora.pdf",
         )
+        if not os.path.exists(pdf_path):
+            pdf_path = os.path.join(
+                settings.BASE_DIR,
+                "assets",
+                "mail_template",
+                "Website Development Proposal Nepdora.pdf",
+            )
 
         if os.path.exists(pdf_path):
             with open(pdf_path, "rb") as f:
