@@ -19,6 +19,7 @@ class Tag(models.Model):
 class Lead(models.Model):
     STATUS_CHOICES = (
         ("new", "new"),
+        ("not_interested", "not_interested"),
         ("discovery", "discovery"),
         ("quoted", "quoted"),
         ("negotiation", "negotiation"),

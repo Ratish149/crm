@@ -94,16 +94,16 @@ class NoteCreateView(generics.CreateAPIView):
 class LeadPipelineView(generics.GenericAPIView):
     # permission_classes = [permissions.IsAuthenticated]
     pagination_class = CustomPagination
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = LeadFilter
+    search_fields = ["full_name", "phone_number"]
 
     def get(self, request, *args, **kwargs):
         queryset = (
             Lead.objects.all().select_related("assigned_to").order_by("-created_at")
         )
 
-        # Apply filters
-        filterset = LeadFilter(request.GET, queryset=queryset)
-        if filterset.is_valid():
-            queryset = filterset.qs
+        queryset = self.filter_queryset(queryset)
 
         pipeline = {}
         for s_code, label in Lead.STATUS_CHOICES:
