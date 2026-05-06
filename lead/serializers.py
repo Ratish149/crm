@@ -61,6 +61,12 @@ class SimpleActivitySerializer(serializers.ModelSerializer):
         fields = ["activity_type", "description"]
 
 
+class SimplePendingFollowupSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Followup
+        fields = ["id", "followup_date", "followup_time", "notes"]
+
+
 class LeadSerializer(serializers.ModelSerializer):
     notes = NoteSerializer(many=True, read_only=True)
     responses = LeadResponseReadSerializer(many=True, read_only=True)
@@ -119,6 +125,7 @@ class LeadListSerializer(serializers.ModelSerializer):
     assigned_to = serializers.StringRelatedField()
     tags = TagSerializer(many=True, read_only=True)
     last_activity = serializers.SerializerMethodField()
+    pending_followups = serializers.SerializerMethodField()
 
     class Meta:
         model = Lead
@@ -131,6 +138,7 @@ class LeadListSerializer(serializers.ModelSerializer):
             "assigned_to",
             "tags",
             "rating",
+            "pending_followups",
         ]
 
     def get_last_activity(self, obj):
@@ -138,6 +146,10 @@ class LeadListSerializer(serializers.ModelSerializer):
         if last_activity:
             return SimpleActivitySerializer(last_activity).data
         return None
+
+    def get_pending_followups(self, obj):
+        pending = obj.followups.filter(status="pending")
+        return SimplePendingFollowupSerializer(pending, many=True).data
 
 
 class LeadDocumentSerializer(serializers.ModelSerializer):
