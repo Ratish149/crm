@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     "django_filters",
     "corsheaders",
     "accounts",
+    "chatbot",
     "lead",
     "discovery",
     "knowledgebase",
@@ -115,12 +116,12 @@ WSGI_APPLICATION = "crm.wsgi.application"
 # Database
 # https://docs.djangoproject.com/en/5.1/ref/settings/#databases
 
-""" DATABASES = {
-    "default": {
-        "ENGINE": "django.db.backends.sqlite3",
-        "NAME": BASE_DIR / "db.sqlite3",
-    }
-} """
+# DATABASES = {
+#     "default": {
+#         "ENGINE": "django.db.backends.sqlite3",
+#         "NAME": BASE_DIR / "db.sqlite3",
+#     }
+# }
 DATABASES = {
     "default": {
         "ENGINE": "django.db.backends.postgresql",
@@ -233,3 +234,7 @@ TINYMCE_DEFAULT_CONFIG = {
 }
 
 RESEND_API_KEY = os.getenv("RESEND_API_KEY")
+
+OLLAMA_URL = os.getenv("OLLAMA_URL", "https://api.ollama.com")
+OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gpt-oss:120b")
+OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY")
