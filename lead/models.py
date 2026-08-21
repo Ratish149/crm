@@ -56,6 +56,16 @@ class Lead(models.Model):
         validators=[MinValueValidator(0), MaxValueValidator(10)],
         help_text=_("Rating from 0 to 10"),
     )
+    summary = models.TextField(
+        blank=True,
+        null=True,
+        help_text=_("AI-generated summary of the lead"),
+    )
+    summary_generated_at = models.DateTimeField(
+        blank=True,
+        null=True,
+        help_text=_("When the AI summary was last generated"),
+    )
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
