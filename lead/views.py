@@ -5,8 +5,11 @@ from datetime import timedelta
 from django.http import HttpResponse
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import filters, generics, permissions, status, views
+from rest_framework.decorators import api_view
 from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
+
+from django.db.models import Count
 
 from crm.utils import CustomPagination, send_resend_email
 
@@ -89,6 +92,11 @@ class NoteCreateView(generics.CreateAPIView):
                 "note_id": note.id,
             },
         )
+
+@api_view(['GET'])
+def get_lead_status_count(request):
+    result = Lead.objects.count()
+    return Response(result)
 
 
 class LeadPipelineView(generics.GenericAPIView):

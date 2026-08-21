@@ -10,6 +10,7 @@ from .serializers import ChatRequestSerializer, ConversationSerializer
 from .services.crm_tools import CRM_TOOLS
 from .services.ollama_service import chat
 from .services.tool_executor import execute_tool
+from .services.summarize import summarize_lead
 
 MAX_TOOL_ITERATIONS = 4
 
@@ -75,3 +76,13 @@ class ConversationDetailView(RetrieveAPIView):
 
     def get_queryset(self):
         return Conversation.objects.filter(user=self.request.user)
+
+class SummaryView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, pk):
+        force_refresh = request.query_params.get("refresh", "").lower() == "true"
+        summary, flowchart = summarize_lead(pk, force_refresh=force_refresh)
+        return Response(
+            {"lead_id": pk, "summary": summary, "next_action_flowchart": flowchart}
+        )
