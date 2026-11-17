@@ -13,6 +13,7 @@ from .views import (
     LeadDocumentCreateView,
     LeadDocumentListView,
     LeadDocumentRetrieveUpdateDestroyView,
+    LeadExportView,
     LeadImportTemplateView,
     LeadListCreateView,
     LeadPipelineView,
@@ -72,6 +73,7 @@ urlpatterns = [
         name="lead-import-template",
     ),
     path("lead/bulk-import/", LeadBulkImportView.as_view(), name="lead-bulk-import"),
+    path("lead/export/", LeadExportView.as_view(), name="lead-export"),
     path(
         "filter-presets/",
         FilterPresetListCreateView.as_view(),

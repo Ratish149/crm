@@ -10,9 +10,11 @@ from rest_framework.parsers import MultiPartParser
 from rest_framework.response import Response
 
 from django.db.models import Count
+from django.utils import timezone
 
 from crm.utils import CustomPagination, send_resend_email
 
+from .export import DEFAULT_COLUMNS, EXPORT_COLUMNS, prepare_queryset, sanitize_cell
 from .filters import ActivityTimelineFilter, FollowupFilter, LeadFilter
 from .models import (
     ActivityTimeline,
@@ -313,6 +315,94 @@ class LeadImportTemplateView(views.APIView):
             "1000",
         ])
 
+        return response
+
+
+class LeadExportView(generics.GenericAPIView):
+    permission_classes = [permissions.IsAuthenticated]
+    filter_backends = [DjangoFilterBackend, filters.SearchFilter]
+    filterset_class = LeadFilter
+    search_fields = ["full_name", "phone_number"]
+
+    def get(self, request, *args, **kwargs):
+        export_format = (request.query_params.get("export_format") or "csv").lower()
+        if export_format not in ("csv", "xlsx"):
+            return Response(
+                {"error": "format must be either 'csv' or 'xlsx'"},
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+
+        column_keys = self.get_column_keys(request)
+        if isinstance(column_keys, Response):
+            return column_keys
+
+        columns = [EXPORT_COLUMNS[key] for key in column_keys]
+        queryset = self.filter_queryset(Lead.objects.all().order_by("-created_at"))
+        queryset = prepare_queryset(queryset, column_keys)
+        rows = [[column.value(lead) for column in columns] for lead in queryset]
+
+        filename = f"leads_{timezone.localdate().isoformat()}.{export_format}"
+        if export_format == "csv":
+            return self.build_csv_response(filename, columns, rows)
+        return self.build_xlsx_response(filename, columns, rows)
+
+    def get_column_keys(self, request):
+        raw = request.query_params.get("columns")
+        if raw is None or not raw.strip():
+            return DEFAULT_COLUMNS
+
+        keys = [key.strip() for key in raw.split(",") if key.strip()]
+        invalid = [key for key in keys if key not in EXPORT_COLUMNS]
+        if invalid:
+            return Response(
+                {
+                    "error": "Unknown export columns",
+                    "invalid": invalid,
+                    "available": list(EXPORT_COLUMNS.keys()),
+                },
+                status=status.HTTP_400_BAD_REQUEST,
+            )
+        return keys
+
+    def build_csv_response(self, filename, columns, rows):
+        response = HttpResponse(content_type="text/csv; charset=utf-8")
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
+        response.write("\ufeff")
+        writer = csv.writer(response)
+        writer.writerow([column.label for column in columns])
+        for row in rows:
+            writer.writerow([sanitize_cell(value) for value in row])
+        return response
+
+    def build_xlsx_response(self, filename, columns, rows):
+        try:
+            from openpyxl import Workbook
+            from openpyxl.utils import get_column_letter
+        except ImportError:
+            return Response(
+                {"error": "XLSX export is not available"},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            )
+
+        workbook = Workbook()
+        sheet = workbook.active
+        sheet.title = "Leads"
+        sheet.append([column.label for column in columns])
+        for row in rows:
+            sheet.append([sanitize_cell(value) for value in row])
+        sheet.freeze_panes = "A2"
+        for index, column in enumerate(columns, start=1):
+            sheet.column_dimensions[get_column_letter(index)].width = min(
+                max(len(column.label) + 4, 12), 40
+            )
+
+        stream = io.BytesIO()
+        workbook.save(stream)
+        response = HttpResponse(
+            stream.getvalue(),
+            content_type="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+        )
+        response["Content-Disposition"] = f'attachment; filename="{filename}"'
         return response
 
 
