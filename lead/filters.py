@@ -10,6 +10,24 @@ class LeadFilter(django_filters.FilterSet):
     activity_type = django_filters.ChoiceFilter(
         choices=ActivityTimeline.ACTIVITY_TYPES, method="filter_by_recent_activity"
     )
+    created_after = django_filters.DateFilter(
+        field_name="created_at__date", lookup_expr="gte"
+    )
+    created_before = django_filters.DateFilter(
+        field_name="created_at__date", lookup_expr="lte"
+    )
+    followup_after = django_filters.DateFilter(method="filter_by_followup_after")
+    followup_before = django_filters.DateFilter(method="filter_by_followup_before")
+
+    def filter_by_followup_after(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(followups__followup_date__gte=value).distinct()
+
+    def filter_by_followup_before(self, queryset, name, value):
+        if not value:
+            return queryset
+        return queryset.filter(followups__followup_date__lte=value).distinct()
 
     def filter_by_recent_activity(self, queryset, name, value):
         if not value:
