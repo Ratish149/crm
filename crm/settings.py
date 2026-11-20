@@ -39,6 +39,7 @@ USE_X_FORWARDED_HOST = True
 # Application definition
 
 INSTALLED_APPS = [
+    "daphne",
     "unfold",
     "django.contrib.admin",
     "django.contrib.auth",
@@ -47,6 +48,7 @@ INSTALLED_APPS = [
     "django.contrib.messages",
     "django.contrib.staticfiles",
     "rest_framework",
+    "channels",
     "rest_framework_simplejwt",
     "django_filters",
     "corsheaders",
@@ -58,7 +60,8 @@ INSTALLED_APPS = [
     "tinymce",
     "invoice",
     "mail",
-    "analytics"
+    "analytics",
+    "messaging"
 ]
 
 CORS_ALLOW_ALL_ORIGINS = True
@@ -112,6 +115,12 @@ TEMPLATES = [
 ]
 
 WSGI_APPLICATION = "crm.wsgi.application"
+ASGI_APPLICATION = "crm.asgi.application"
+CHANNEL_LAYERS = {
+    "default": {
+        "BACKEND": "channels.layers.InMemoryChannelLayer",
+    }
+}
 
 
 # Database
@@ -239,3 +248,7 @@ RESEND_API_KEY = os.getenv("RESEND_API_KEY")
 OLLAMA_URL = os.getenv("OLLAMA_URL", "https://api.ollama.com")
 OLLAMA_MODEL = os.getenv("OLLAMA_MODEL", "gpt-oss:120b")
 OLLAMA_API_KEY = os.getenv("OLLAMA_API_KEY")
+
+ZERNIO_API_KEY = os.getenv("ZERNIO_API_KEY")
+ZERNIO_WEBHOOK_SECRET = os.getenv("ZERNIO_WEBHOOK_SECRET")
+ZERNIO_WEBHOOK_URL = os.getenv("ZERNIO_WEBHOOK_URL")
