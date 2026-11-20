@@ -12,4 +12,4 @@ python manage.py collectstatic --noinput
 python manage.py migrate --noinput
 
 # Run the web server
-gunicorn crm.wsgi:application --bind 0.0.0.0:8000
+daphne -b 0.0.0.0 -p 8000 crm.asgi:application
